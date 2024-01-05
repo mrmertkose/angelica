@@ -1,13 +1,14 @@
 #!/bin/bash
 
 NEW_USER="angelica"
-NEW_USER_PASSWORD="123456"
+NEW_USER_PASSWORD=$(openssl rand -base64 32|sha256sum|base64|head -c 32| tr '[:upper:]' '[:lower:]')
 WWW_DIR="/var/www"
 SITE_DIR="angelica"
 LOCAL_BIN_DIR="/usr/local/bin"
 
 sudo apt-get update
-sudo apt-get -y install software-properties-common curl wget zip unzip git
+sudo apt-get -y install software-properties-common curl wget zip unzip git nodejs
+sudo apt -y install npm
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -79,7 +80,7 @@ sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
 sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 
-cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli /usr/local/bin/composer update
+cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli /usr/local/bin/composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
 cd "$WWW_DIR/$SITE_DIR" && sudo frankenphp php-cli artisan key:generate
 

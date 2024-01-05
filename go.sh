@@ -4,7 +4,7 @@ NEW_USER="angelica"
 NEW_USER_PASSWORD="123456"
 WWW_DIR="/var/www"
 SITE_DIR="angelica"
-FRANKEN_DIR="/etc/franken"
+FRANKEN_DIR="/usr/local/bin"
 
 sudo apt-get update
 sudo apt-get -y install software-properties-common curl wget zip unzip git
@@ -17,10 +17,8 @@ echo "$NEW_USER:$NEW_USER_PASSWORD" | sudo chpasswd
 sudo usermod -aG sudo $NEW_USER
 
 # FRANKENPHP
-sudo mkdir -p $FRANKEN_DIR
 sudo curl -L -o "$FRANKEN_DIR/frankenphp" https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-x86_64
 sudo chmod +x "$FRANKEN_DIR/frankenphp"
-sudo chown -R www-data:$NEW_USER "$FRANKEN_DIR/frankenphp"
 
 # CADDYFILE
 CADDYFILE="$FRANKEN_DIR/Caddyfile"
@@ -38,8 +36,10 @@ localhost {
 }
 EOF
 sudo chmod +x $CADDYFILE
-sudo chown -R www-data:$NEW_USER $CADDYFILE
 
+#COMPOSER INSTALL
+curl -sS https://getcomposer.org/installer -o composer-setup.php
+sudo frankenphp php-cli composer-setup.php --install-dir=/usr/local/bin --filename=composer
 
 # SERVER START CONFIG
 sudo touch /etc/systemd/system/frankServer.service
@@ -50,7 +50,7 @@ After=network.target
 
 [Service]
 Restart=always
-ExecStart="$FRANKEN_DIR/frankenphp" run --config $CADDYFILE
+ExecStart=frankenphp run --config $CADDYFILE
 
 [Install]
 WantedBy=multi-user.target
@@ -79,16 +79,14 @@ sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
 sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 
-#COMPOSER INSTALL
-curl -sS https://getcomposer.org/installer -o composer-setup.php
-sudo "$FRANKEN_DIR/frankenphp" composer-setup.php --install-dir=/usr/local/bin --filename=composer
-cd "$WWW_DIR/$SITE_DIR" && sudo "$FRANKEN_DIR/frankenphp" php-cli /usr/local/bin/composer install
+
+cd "$WWW_DIR/$SITE_DIR" && sudo frankenphp php-cli composer install
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab
 touch $TASK
 cat > "$TASK" <<EOF
-* * * * * cd "$WWW_DIR/$SITE_DIR" && "$FRANKEN_DIR/frankenphp" php-cli artisan schedule:run >> /dev/null 2>&1
+* * * * * cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli artisan schedule:run >> /dev/null 2>&1
 EOF
 crontab $TASK
 

@@ -8,7 +8,6 @@ LOCAL_BIN_DIR="/usr/local/bin"
 
 sudo apt-get update
 sudo apt-get -y install software-properties-common curl wget zip unzip git
-sudo apt-get -y install php8.1-cli
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -40,7 +39,7 @@ sudo chmod +x $CADDYFILE
 
 #COMPOSER INSTALL
 curl -sS https://getcomposer.org/installer -o composer-setup.php
-sudo php composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
+sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
 # SERVER START CONFIG
 sudo touch /etc/systemd/system/frankServer.service
@@ -81,13 +80,13 @@ sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 
 
-cd "$WWW_DIR/$SITE_DIR" && sudo composer install
+cd "$WWW_DIR/$SITE_DIR" && sudo frankenphp php-cli /usr/local/bin/composer update
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab
 touch $TASK
 cat > "$TASK" <<EOF
-* * * * * cd "$WWW_DIR/$SITE_DIR" && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli artisan schedule:run >> /dev/null 2>&1
 EOF
 crontab $TASK
 

@@ -73,11 +73,16 @@ sudo ufw allow ssh
 sudo ufw allow http
 sudo ufw allow https
 
-# MAIN PROJECT FILE --> (*)
+# MAIN PROJECT FILE
 sudo mkdir -p "$WWW_DIR/$SITE_DIR"
 sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
 sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
+
+#COMPOSER INSTALL
+curl -sS https://getcomposer.org/installer -o composer-setup.php
+sudo "$FRANKEN_DIR/frankenphp" composer-setup.php --install-dir=/usr/local/bin --filename=composer
+cd "$WWW_DIR/$SITE_DIR" && sudo "$FRANKEN_DIR/frankenphp" php-cli /usr/local/bin/composer install
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab

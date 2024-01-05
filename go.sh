@@ -80,8 +80,8 @@ sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 
 cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli /usr/local/bin/composer update
-cd "$WWW_DIR/$SITE_DIR" && cp .env.example .env
-cd "$WWW_DIR/$SITE_DIR" && frankenphp php-cli artisan key:generate
+cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
+cd "$WWW_DIR/$SITE_DIR" && sudo frankenphp php-cli artisan key:generate
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab

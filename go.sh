@@ -23,11 +23,12 @@ sudo apt install -y php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8.2-xmlr
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
-sudo apt install -y nodejs npm
+#sudo apt install -y nodejs npm
 sudo apt install -y composer
 sudo apt install -y git
 sudo apt install -y nginx
 sudo apt install -y ffmpeg
+sudo systemctl disable apache2
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -35,6 +36,19 @@ echo "$NEW_USER:$NEW_USER_PASSWORD" | sudo chpasswd
 
 # USER ADD SUDO
 sudo usermod -aG sudo $NEW_USER
+
+IP=""
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --ip=*) IP="${1#*=}" ;;
+    *) echo "Unknown parameter: $1"; exit 1 ;;
+  esac
+  shift
+done
+
+if [ -z "$IP" ]; then
+    IP=$(curl -s https://checkip.amazonaws.com)
+fi
 
 ## FRANKENPHP
 #sudo curl -L -o "$LOCAL_BIN_DIR/frankenphp" https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-x86_64
@@ -65,34 +79,46 @@ NGINX=/etc/nginx/sites-available/default
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
-    listen 80;
-    server_name localhost;
-    root /var/www/$SITE_DIR/public;
+      listen 80;
+       server_name server_domain_or_IP;
+       root /var/www/$SITE_DIR/public;
 
-    index index.php index.html index.htm;
+       add_header X-Frame-Options "SAMEORIGIN";
+       add_header X-XSS-Protection "1; mode=block";
+       add_header X-Content-Type-Options "nosniff";
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+       index index.html index.htm index.php;
 
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
+       charset utf-8;
 
-    location ~ /\.ht {
-        deny all;
-    }
+       location / {
+           try_files $uri $uri/ /index.php?$query_string;
+       }
 
-    error_log  /var/log/nginx/default_error.log;
-    access_log /var/log/nginx/default_access.log;
+       location = /favicon.ico { access_log off; log_not_found off; }
+       location = /robots.txt  { access_log off; log_not_found off; }
+
+       error_page 404 /index.php;
+
+       location ~ \.php$ {
+           fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+           fastcgi_index index.php;
+           fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+           include fastcgi_params;
+       }
+
+       location ~ /\.(?!well-known).* {
+           deny all;
+       }
+
+    error_log  /var/log/nginx/$SITE_DIR_error.log;
+    access_log /var/log/nginx/$SITE_DIR_access.log;
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled
+sudo ln -s /etc/nginx/sites-available/$SITE_DIR /etc/nginx/sites-enabled
 sudo service nginx restart
+
 
 # FIREWALL
 sudo apt-get -y install fail2ban
@@ -122,6 +148,7 @@ sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
+cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clears
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab

@@ -15,11 +15,8 @@ sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:ondrej/php
 sudo apt update
 
-sudo apt install -y php8.1
-sudo apt install -y php8.2
-
-sudo apt install -y php8.1-fpm php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
-sudo apt install -y php8.2-fpm php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
+sudo apt install -y php8.1 php8.1-fpm php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
+sudo apt install -y php8.2 php8.2-fpm php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
@@ -38,7 +35,7 @@ sudo usermod -aG sudo $NEW_USER
 
 IP=""
 if [ -n "$1" ]; then
-  IP=$1
+  IP="localhost"
 else
   IP=$(curl -s https://checkip.amazonaws.com)
 fi
@@ -68,13 +65,13 @@ fi
 #curl -sS https://getcomposer.org/installer -o composer-setup.php
 #sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
-NGINX=/etc/nginx/sites-available/"$SITE_DIR"
+NGINX=/etc/nginx/sites-available/angelica
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
       listen 80;
        server_name "$IP";
-       root /var/www/"$SITE_DIR"/public;
+       root /var/www/angelica/public;
 
        add_header X-Frame-Options "SAMEORIGIN";
        add_header X-XSS-Protection "1; mode=block";
@@ -104,12 +101,12 @@ server {
            deny all;
        }
 
-    error_log  /var/log/nginx/"$SITE_DIR"_error.log;
-    access_log /var/log/nginx/"$SITE_DIR"_access.log;
+    error_log  /var/log/nginx/angelica_error.log;
+    access_log /var/log/nginx/angelica_access.log;
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/$SITE_DIR /etc/nginx/sites-enabled
+sudo ln -s /etc/nginx/sites-available/angelica /etc/nginx/sites-enabled
 sudo service nginx restart
 
 

@@ -18,8 +18,8 @@ sudo apt update
 sudo apt install -y php8.1
 sudo apt install -y php8.2
 
-sudo apt install -y php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
-sudo apt install -y php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
+sudo apt install -y php8.1-fpm php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
+sudo apt install -y php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
@@ -62,37 +62,32 @@ sudo usermod -aG sudo $NEW_USER
 #sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
 NGINX=/etc/nginx/sites-available/default
-if test -f "$NGINX"; then
-    sudo unlink NGINX
-fi
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    root "$WWW_DIR/$SITE_DIR/public";
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Content-Type-Options "nosniff";
-    client_body_timeout 10s;
-    client_header_timeout 10s;
-    client_max_body_size 256M;
-    index index.html index.php;
-    charset utf-8;
-    server_tokens off;
+    listen 80;
+    server_name localhost;
+    root /var/www/$SITE_DIR/public;
+
+    index index.php index.html index.htm;
+
     location / {
-        try_files   \$uri     \$uri/  /index.php?\$query_string;
+        try_files $uri $uri/ /index.php?$query_string;
     }
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-    error_page 404 /index.php;
+
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
     }
+
     location ~ /\.ht {
         deny all;
     }
+
+    error_log  /var/log/nginx/default_error.log;
+    access_log /var/log/nginx/default_access.log;
 }
 EOF
 

@@ -18,17 +18,16 @@ sudo apt update
 sudo apt install -y php8.1
 sudo apt install -y php8.2
 
-sudo apt install -y php8.1-fpm php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
-sudo apt install -y php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
+sudo apt install -y php8.1-fpm php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
+sudo apt install -y php8.2-fpm php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
-#sudo apt install -y nodejs npm
+sudo apt install -y nodejs npm
 sudo apt install -y composer
 sudo apt install -y git
 sudo apt install -y nginx
 sudo apt install -y ffmpeg
-sudo systemctl disable apache2
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -69,13 +68,13 @@ fi
 #curl -sS https://getcomposer.org/installer -o composer-setup.php
 #sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
-NGINX=/etc/nginx/sites-available/default
+NGINX=/etc/nginx/sites-available/"$SITE_DIR"
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
       listen 80;
-       server_name server_domain_or_IP;
-       root /var/www/$SITE_DIR/public;
+       server_name "$IP";
+       root /var/www/"$SITE_DIR"/public;
 
        add_header X-Frame-Options "SAMEORIGIN";
        add_header X-XSS-Protection "1; mode=block";
@@ -105,8 +104,8 @@ server {
            deny all;
        }
 
-    error_log  /var/log/nginx/$SITE_DIR_error.log;
-    access_log /var/log/nginx/$SITE_DIR_access.log;
+    error_log  /var/log/nginx/"$SITE_DIR"_error.log;
+    access_log /var/log/nginx/"$SITE_DIR"_access.log;
 }
 EOF
 
@@ -142,7 +141,7 @@ sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
-cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clears
+cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab
@@ -153,6 +152,8 @@ EOF
 crontab $TASK
 
 sleep 1s
+
+sudo service nginx restart
 
 #START SERVER
 #sudo systemctl start frankServer

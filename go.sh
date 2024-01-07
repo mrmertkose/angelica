@@ -38,16 +38,10 @@ echo "$NEW_USER:$NEW_USER_PASSWORD" | sudo chpasswd
 sudo usermod -aG sudo $NEW_USER
 
 IP=""
-while [[ "$#" -gt 0 ]]; do
-  case $1 in
-    --ip=*) IP="${1#*=}" ;;
-    *) echo "Unknown parameter: $1"; exit 1 ;;
-  esac
-  shift
-done
-
-if [ -z "$IP" ]; then
-    IP=$(curl -s https://checkip.amazonaws.com)
+if [ -n "$1" ]; then
+  IP=$1
+else
+  IP=$(curl -s https://checkip.amazonaws.com)
 fi
 
 ## FRANKENPHP

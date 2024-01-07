@@ -10,9 +10,18 @@ SITE_DIR="angelica"
 sudo apt update
 sudo apt upgrade -y
 
-sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-ctype php8.1-curl php8.1-dom php8.1-fileinfo php8.1-filter php8.1-hash php8.1-mbstring php8.1-openssl php8.1-pcre php8.1-pdo php8.1-session php8.1-tokenizer php8.1-xml
-sudo apt install -y php8.2 php8.2-cli php8.2-fpm php8.2-ctype php8.2-curl php8.2-dom php8.2-fileinfo php8.2-filter php8.2-hash php8.2-mbstring php8.2-openssl php8.2-pcre php8.2-pdo php8.2-session php8.2-tokenizer php8.2-xml
-sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-ctype php8.3-curl php8.3-dom php8.3-fileinfo php8.3-filter php8.3-hash php8.3-mbstring php8.3-openssl php8.3-pcre php8.3-pdo php8.3-session php8.3-tokenizer php8.3-xml
+sudo apt install -y curl wget zip unzip
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+sudo apt update
+
+sudo apt install -y php8.1
+sudo apt install -y php8.2
+
+sudo apt install -y php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
+sudo apt install -y php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
+
+sudo update-alternatives --set php /usr/bin/php8.1
 
 sudo apt install -y nodejs npm
 sudo apt install -y composer

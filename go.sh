@@ -4,6 +4,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 NEW_USER="angelica"
 NEW_USER_PASSWORD=$(openssl rand -base64 32|sha256sum|base64|head -c 32| tr '[:upper:]' '[:lower:]')
+DBPASS=$(openssl rand -base64 24|sha256sum|base64|head -c 32| tr '[:upper:]' '[:lower:]')
 WWW_DIR="/var/www"
 SITE_DIR="angelica"
 
@@ -21,11 +22,7 @@ sudo apt install -y php8.2 php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
-sudo apt install -y nodejs npm
-sudo apt install -y composer
-sudo apt install -y git
-
-sudo apt install -y ffmpeg
+sudo apt install -y nodejs npm composer git ffmpeg supervisor
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -40,31 +37,6 @@ if [ -n "$1" ]; then
 else
   IP=$(curl -s https://checkip.amazonaws.com)
 fi
-
-## FRANKENPHP
-#sudo curl -L -o "$LOCAL_BIN_DIR/frankenphp" https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-x86_64
-#sudo chmod +x "$LOCAL_BIN_DIR/frankenphp"
-#
-## CADDYFILE
-#CADDYFILE="$LOCAL_BIN_DIR/Caddyfile"
-#sudo cat > "$CADDYFILE" <<EOF
-#{
-#        frankenphp
-#        order php_server before file_server
-#}
-#localhost {
-#        root * "$WWW_DIR/$SITE_DIR/public"
-#        encode zstd gzip
-#        php_server {
-#                resolve_root_symlink
-#        }
-#}
-#EOF
-#sudo chmod +x $CADDYFILE
-#
-##COMPOSER INSTALL
-#curl -sS https://getcomposer.org/installer -o composer-setup.php
-#sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
 NGINX=/etc/nginx/sites-available/default
 if test -f "$NGINX"; then
@@ -103,7 +75,6 @@ server {
 EOF
 sudo service nginx restart
 
-
 # FIREWALL
 sudo apt-get -y install fail2ban
 JAIL=/etc/fail2ban/jail.local
@@ -122,15 +93,53 @@ sudo ufw allow http
 sudo ufw allow https
 sudo ufw allow "Nginx FULL"
 
+# MYSQL
+sudo apt-get install -y mysql-server
+SECURE_MYSQL=$(expect -c "
+set timeout 10
+spawn mysql_secure_installation
+expect \"Press y|Y for Yes, any other key for No:\"
+send \"n\r\"
+expect \"New password:\"
+send \"$DBPASS\r\"
+expect \"Re-enter new password:\"
+send \"$DBPASS\r\"
+expect \"Remove anonymous users? (Press y|Y for Yes, any other key for No)\"
+send \"y\r\"
+expect \"Disallow root login remotely? (Press y|Y for Yes, any other key for No)\"
+send \"n\r\"
+expect \"Remove test database and access to it? (Press y|Y for Yes, any other key for No)\"
+send \"y\r\"
+expect \"Reload privilege tables now? (Press y|Y for Yes, any other key for No) \"
+send \"y\r\"
+expect eof
+")
+echo "$SECURE_MYSQL"
+/usr/bin/mysql -u root -p$DBPASS <<EOF
+use mysql;
+CREATE USER 'angelica'@'%' IDENTIFIED WITH mysql_native_password BY '$DBPASS';
+GRANT ALL PRIVILEGES ON *.* TO 'angelica'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EOF
+
 
 # MAIN PROJECT FILE
+/usr/bin/mysql -u root -p$DBPASS <<EOF
+CREATE DATABASE IF NOT EXISTS angelica;
+EOF
 sudo mkdir -p "$WWW_DIR/$SITE_DIR"
 sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
 sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
+sudo rpl -i -w "DB_USERNAME=dbuser" "DB_USERNAME=angelica" /var/www/angelica/.env
+sudo rpl -i -w "DB_PASSWORD=dbpass" "DB_PASSWORD=$DBPASS" /var/www/angelica/.env
+sudo rpl -i -w "DB_DATABASE=dbname" "DB_DATABASE=angelica" /var/www/angelica/.env
+sudo rpl -i -w "APP_ENV=local" "APP_ENV=production" /var/www/angelica/.env
+sudo rpl -i -w "APP_DEBUG=true" "APP_DEBUG=false" /var/www/angelica/.env
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
+cd "$WWW_DIR/$SITE_DIR" && php artisan storage:link
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize
 sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/storage"
@@ -138,19 +147,57 @@ sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/storage"
 sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 
+# LET'S ENCRYPT
+sudo apt-get install -y certbot
+sudo apt-get install -y python3-certbot-nginx
+
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab
 touch $TASK
 cat > "$TASK" <<EOF
+10 4 * * 7 certbot renew --nginx --non-interactive --post-hook "systemctl restart nginx"
 * * * * * cd "$WWW_DIR/$SITE_DIR" && php artisan schedule:run >> /dev/null 2>&1
 EOF
 crontab $TASK
 
-sleep 1s
+TASK=/etc/supervisor/conf.d/angelica.conf
+touch $TASK
+cat > "$TASK" <<EOF
+[program:angelica-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/angelica/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=angelica
+numprocs=8
+redirect_stderr=true
+stdout_logfile=/var/www/angelica/storage/logs/angelica_worker.log
+stopwaitsecs=3600
+EOF
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start all
+sudo service supervisor restart
 
 sudo service nginx restart
 
-#START SERVER
-#sudo systemctl start frankServer
-#sudo systemctl enable frankServer
-#sudo systemctl daemon-reload
+# SETUP COMPLETE MESSAGE
+clear
+echo "***********************************************************"
+echo "                    SETUP COMPLETE"
+echo "***********************************************************"
+echo ""
+echo " SSH root user: angelica"
+echo " SSH root pass: $NEW_USER_PASSWORD"
+echo " MySQL root user: angelica"
+echo " MySQL root pass: $DBPASS"
+echo ""
+echo " To manage your server visit: http://$IP"
+echo " and click on 'dashboard' button."
+echo " Default credentials are: administrator / 12345678"
+echo ""
+echo "***********************************************************"
+echo "          DO NOT LOSE AND KEEP SAFE THIS DATA"
+echo "***********************************************************"

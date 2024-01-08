@@ -11,7 +11,7 @@ SITE_DIR="angelica"
 sudo apt update
 sudo apt upgrade -y
 
-sudo apt install -y curl wget zip unzip nginx
+sudo apt install -y curl wget zip unzip rpl nginx
 
 sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:ondrej/php
@@ -133,11 +133,12 @@ sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
-sudo rpl -i -w "DB_USERNAME=dbuser" "DB_USERNAME=angelica" /var/www/angelica/.env
-sudo rpl -i -w "DB_PASSWORD=dbpass" "DB_PASSWORD=$DBPASS" /var/www/angelica/.env
-sudo rpl -i -w "DB_DATABASE=dbname" "DB_DATABASE=angelica" /var/www/angelica/.env
+sudo rpl -i -w "DB_USERNAME=user" "DB_USERNAME=angelica" /var/www/angelica/.env
+sudo rpl -i -w "DB_PASSWORD=pass" "DB_PASSWORD=$DBPASS" /var/www/angelica/.env
+sudo rpl -i -w "DB_DATABASE=db" "DB_DATABASE=angelica" /var/www/angelica/.env
 sudo rpl -i -w "APP_ENV=local" "APP_ENV=production" /var/www/angelica/.env
 sudo rpl -i -w "APP_DEBUG=true" "APP_DEBUG=false" /var/www/angelica/.env
+sudo rpl -i -w "APP_URL=http://localhost" "APP_URL=http://$IP" /var/www/angelica/.env
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
 cd "$WWW_DIR/$SITE_DIR" && php artisan storage:link
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
@@ -157,6 +158,9 @@ touch $TASK
 cat > "$TASK" <<EOF
 10 4 * * 7 certbot renew --nginx --non-interactive --post-hook "systemctl restart nginx"
 * * * * * cd "$WWW_DIR/$SITE_DIR" && php artisan schedule:run >> /dev/null 2>&1
+20 4 * * 7 apt-get -y update
+40 4 * * 7 DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" dist-upgrade
+20 5 * * 7 apt-get clean && apt-get autoclean
 EOF
 crontab $TASK
 

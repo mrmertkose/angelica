@@ -38,7 +38,7 @@ IP=""
 if [ -n "$1" ]; then
   IP=localhost
 else
-  IP=(curl -4 icanhazip.com)
+  IP=$(curl -s https://checkip.amazonaws.com)
 fi
 
 ## FRANKENPHP
@@ -128,11 +128,15 @@ sudo mkdir -p "$WWW_DIR/$SITE_DIR"
 sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
 sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
-
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
-cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
+cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
+cd "$WWW_DIR/$SITE_DIR" && php artisan optimize
+sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/storage"
+sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/storage"
+sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/bootstrap/cache"
+sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab

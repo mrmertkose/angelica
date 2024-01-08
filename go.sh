@@ -66,48 +66,41 @@ fi
 #curl -sS https://getcomposer.org/installer -o composer-setup.php
 #sudo frankenphp php-cli composer-setup.php --install-dir="$LOCAL_BIN_DIR" --filename=composer
 
-NGINX=/etc/nginx/sites-available/angelica
+NGINX=/etc/nginx/sites-available/default
+if test -f "$NGINX"; then
+    sudo unlink NGINX
+fi
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
-       listen 80;
-       server_name "$IP";
-       root /var/www/angelica/public;
-
-       add_header X-Frame-Options "SAMEORIGIN";
-       add_header X-XSS-Protection "1; mode=block";
-       add_header X-Content-Type-Options "nosniff";
-
-       index index.html index.htm index.php;
-
-       charset utf-8;
-
-       location / {
-            try_files $uri $uri/ /index.php?$args;
-       }
-
-       location = /favicon.ico { access_log off; log_not_found off; }
-       location = /robots.txt  { access_log off; log_not_found off; }
-
-       error_page 404 /index.php;
-
-       location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/run/php/php8.1-fpm.sock;
-            include fastcgi_params;
-            fastcgi_read_timeout 180;
-       }
-
-       location ~ /\.(?!well-known).* {
-           deny all;
-       }
-
-    error_log  /var/log/nginx/angelica_error.log;
-    access_log /var/log/nginx/angelica_access.log;
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name "$IP";
+    root /var/www/angelica/public;
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+    client_body_timeout 10s;
+    client_header_timeout 10s;
+    client_max_body_size 256M;
+    index index.html index.php;
+    charset utf-8;
+    server_tokens off;
+    location / {
+        try_files   \$uri     \$uri/  /index.php?\$query_string;
+    }
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+    error_page 404 /index.php;
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+    }
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
 }
 EOF
-
-sudo ln -s /etc/nginx/sites-available/angelica /etc/nginx/sites-enabled
 sudo service nginx restart
 
 

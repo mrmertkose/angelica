@@ -10,7 +10,8 @@ SITE_DIR="angelica"
 sudo apt update
 sudo apt upgrade -y
 
-sudo apt install -y curl wget zip unzip
+sudo apt install -y curl wget zip unzip nginx
+
 sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:ondrej/php
 sudo apt update
@@ -23,7 +24,7 @@ sudo update-alternatives --set php /usr/bin/php8.1
 sudo apt install -y nodejs npm
 sudo apt install -y composer
 sudo apt install -y git
-sudo apt install -y nginx
+
 sudo apt install -y ffmpeg
 
 # CREATE USER
@@ -37,7 +38,7 @@ IP=""
 if [ -n "$1" ]; then
   IP=localhost
 else
-  IP=$(curl -s https://checkip.amazonaws.com)
+  IP=(curl -4 icanhazip.com)
 fi
 
 ## FRANKENPHP
@@ -69,7 +70,7 @@ NGINX=/etc/nginx/sites-available/angelica
 sudo touch $NGINX
 sudo cat > "$NGINX" <<EOF
 server {
-      listen 80;
+       listen 80;
        server_name "$IP";
        root /var/www/angelica/public;
 
@@ -82,7 +83,7 @@ server {
        charset utf-8;
 
        location / {
-           try_files $uri $uri/ /index.php?$query_string;
+            try_files $uri $uri/ /index.php?$args;
        }
 
        location = /favicon.ico { access_log off; log_not_found off; }
@@ -91,10 +92,10 @@ server {
        error_page 404 /index.php;
 
        location ~ \.php$ {
-           fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
-           fastcgi_index index.php;
-           fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-           include fastcgi_params;
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+            include fastcgi_params;
+            fastcgi_read_timeout 180;
        }
 
        location ~ /\.(?!well-known).* {

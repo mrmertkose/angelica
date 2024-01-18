@@ -187,6 +187,8 @@ sudo service supervisor restart
 
 sudo service nginx restart
 
+
+
 # SETUP COMPLETE MESSAGE
 clear
 echo "***********************************************************"

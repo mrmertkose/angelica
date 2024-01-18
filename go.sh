@@ -11,10 +11,12 @@ SITE_DIR="angelica"
 sudo apt update
 sudo apt upgrade -y
 
-sudo apt install -y curl wget zip unzip rpl nginx
+sudo apt install -y curl wget zip unzip rpl
 
 sudo apt install -y software-properties-common
-sudo add-apt-repository ppa:ondrej/php
+#sudo add-apt-repository ppa:ondrej/php
+sudo add-apt-repository -y ppa:ondrej/nginx
+
 sudo apt update
 
 sudo apt install -y php8.1 php8.1-fpm php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
@@ -136,7 +138,7 @@ sudo chown -R $NEW_USER:www-data "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
-cd "$WWW_DIR/$SITE_DIR" && node install
+cd "$WWW_DIR/$SITE_DIR" && npm install
 cd "$WWW_DIR/$SITE_DIR" && npm run build
 sudo rpl -i -w "DB_USERNAME=user" "DB_USERNAME=angelica" /var/www/angelica/.env
 sudo rpl -i -w "DB_PASSWORD=pass" "DB_PASSWORD=$DBPASS" /var/www/angelica/.env

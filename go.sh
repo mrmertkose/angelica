@@ -195,7 +195,6 @@ sudo service nginx restart
 
 
 # SETUP COMPLETE MESSAGE
-clear
 echo "***********************************************************"
 echo "                    SETUP COMPLETE"
 echo "***********************************************************"

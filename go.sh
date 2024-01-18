@@ -22,7 +22,10 @@ sudo apt install -y php8.2 php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8
 
 sudo update-alternatives --set php /usr/bin/php8.1
 
-sudo apt install -y nodejs npm composer git ffmpeg supervisor
+sudo apt install -y composer git ffmpeg supervisor
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs
+sudo apt install -y npm
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER
@@ -129,10 +132,12 @@ CREATE DATABASE IF NOT EXISTS angelica;
 EOF
 sudo mkdir -p "$WWW_DIR/$SITE_DIR"
 sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
-sudo chown -R www-data:$NEW_USER "$WWW_DIR/$SITE_DIR"
+sudo chown -R $NEW_USER:www-data "$WWW_DIR/$SITE_DIR"
 sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
+cd "$WWW_DIR/$SITE_DIR" && node install
+cd "$WWW_DIR/$SITE_DIR" && npm run build
 sudo rpl -i -w "DB_USERNAME=user" "DB_USERNAME=angelica" /var/www/angelica/.env
 sudo rpl -i -w "DB_PASSWORD=pass" "DB_PASSWORD=$DBPASS" /var/www/angelica/.env
 sudo rpl -i -w "DB_DATABASE=db" "DB_DATABASE=angelica" /var/www/angelica/.env
@@ -147,6 +152,7 @@ sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/storage"
 sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/storage"
 sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/bootstrap/cache"
+
 
 # LET'S ENCRYPT
 sudo apt-get install -y certbot
@@ -186,7 +192,6 @@ sudo supervisorctl start all
 sudo service supervisor restart
 
 sudo service nginx restart
-
 
 
 # SETUP COMPLETE MESSAGE

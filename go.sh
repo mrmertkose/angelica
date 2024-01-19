@@ -148,7 +148,7 @@ sudo rpl -i -w "APP_URL=http://localhost" "APP_URL=http://$IP" /var/www/angelica
 sudo rpl -i -w "CHANGE_IP" $IP /var/www/angelica/database/seeders/DatabaseSeeder.php
 sudo rpl -i -w "CHANGE_SSH_PASSWORD" $NEW_USER_PASSWORD /var/www/angelica/database/seeders/DatabaseSeeder.php
 sudo rpl -i -w "CHANGE_DB_PASSWORD" $DBPASS /var/www/angelica/database/seeders/DatabaseSeeder.php
-cd "$WWW_DIR/$SITE_DIR" && php artisan migrate --seed
+cd "$WWW_DIR/$SITE_DIR" && php artisan migrate --seed --force
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
 cd "$WWW_DIR/$SITE_DIR" && php artisan storage:link
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate

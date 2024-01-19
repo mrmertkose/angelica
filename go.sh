@@ -25,11 +25,7 @@ sudo update-alternatives --set php /usr/bin/php8.1
 
 sudo apt install -y composer git ffmpeg supervisor
 
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
-command -v nvm
-source ~/.bashrc
-nvm install --lts
-
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && source ~/.bashrc && nvm install --lts
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER

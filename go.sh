@@ -145,6 +145,10 @@ sudo rpl -i -w "DB_DATABASE=db" "DB_DATABASE=angelica" /var/www/angelica/.env
 sudo rpl -i -w "APP_ENV=local" "APP_ENV=production" /var/www/angelica/.env
 sudo rpl -i -w "APP_DEBUG=true" "APP_DEBUG=false" /var/www/angelica/.env
 sudo rpl -i -w "APP_URL=http://localhost" "APP_URL=http://$IP" /var/www/angelica/.env
+sudo rpl -i -w "CHANGE_IP" $IP /var/www/angelica/database/seeders/DatabaseSeeder.php
+sudo rpl -i -w "CHANGE_SSH_PASSWORD" $NEW_USER_PASSWORD /var/www/angelica/database/seeders/DatabaseSeeder.php
+sudo rpl -i -w "CHANGE_DB_PASSWORD" $DBPASS /var/www/angelica/database/seeders/DatabaseSeeder.php
+cd "$WWW_DIR/$SITE_DIR" && php artisan migrate --seed
 cd "$WWW_DIR/$SITE_DIR" && php artisan optimize:clear
 cd "$WWW_DIR/$SITE_DIR" && php artisan storage:link
 cd "$WWW_DIR/$SITE_DIR" && php artisan key:generate
@@ -207,7 +211,7 @@ echo " MySQL root pass: $DBPASS"
 echo ""
 echo " To manage your server visit: http://$IP"
 echo " and click on 'dashboard' button."
-echo " Default credentials are: administrator / 12345678"
+echo " Default credentials are: demouser@mail.com / 123456789"
 echo ""
 echo "***********************************************************"
 echo "          DO NOT LOSE AND KEEP SAFE THIS DATA"

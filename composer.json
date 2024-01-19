@@ -6,11 +6,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "bensampo/laravel-enum": "^6.8",
         "guzzlehttp/guzzle": "^7.2",
+        "inertiajs/inertia-laravel": "^0.6.8",
         "laravel/framework": "^10.10",
+        "laravel/jetstream": "^4.2",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "phpseclib/phpseclib": "^3.0"
+        "phpseclib/phpseclib": "^3.0",
+        "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

@@ -25,7 +25,9 @@ sudo update-alternatives --set php /usr/bin/php8.1
 
 sudo apt install -y composer git ffmpeg supervisor
 
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && source ~/.bashrc && nvm install --lts
+curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
+sudo apt-get install -y nodejs npm
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER

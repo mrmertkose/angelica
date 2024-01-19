@@ -14,7 +14,7 @@ sudo apt upgrade -y
 sudo apt install -y curl wget zip unzip rpl
 
 sudo apt install -y software-properties-common
-#sudo add-apt-repository ppa:ondrej/php
+sudo add-apt-repository -y ppa:ondrej/php
 sudo add-apt-repository -y ppa:ondrej/nginx
 
 sudo apt update
@@ -26,8 +26,9 @@ sudo update-alternatives --set php /usr/bin/php8.1
 
 sudo apt install -y composer git ffmpeg supervisor
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs
-sudo apt install -y npm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc && nvm install --lts
+
 
 # CREATE USER
 sudo useradd -m -s /bin/bash $NEW_USER

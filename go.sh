@@ -45,7 +45,7 @@ sudo usermod -aG sudo $NEW_USER
 
 IP=""
 if [ -n "$1" ]; then
-  IP=$1
+  IP=$(echo "$1" | cut -d= -f2)
 else
   IP=$(curl -s https://checkip.amazonaws.com)
 fi

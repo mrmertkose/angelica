@@ -141,8 +141,6 @@ CREATE DATABASE IF NOT EXISTS angelica;
 EOF
 sudo mkdir -p "$WWW_DIR/$SITE_DIR"
 sudo git clone https://github.com/mrmertkose/angelica.git "$WWW_DIR/$SITE_DIR"
-sudo chown -R $NEW_USER:www-data "$WWW_DIR/$SITE_DIR"
-sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 cd "$WWW_DIR/$SITE_DIR" && composer update --no-interaction
 cd "$WWW_DIR/$SITE_DIR" && sudo cp .env.example .env
 cd "$WWW_DIR/$SITE_DIR" && npm install
@@ -165,6 +163,8 @@ sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/storage"
 sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/storage"
 sudo chmod -R o+w "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/bootstrap/cache"
+sudo chown -R $NEW_USER:www-data "$WWW_DIR/$SITE_DIR"
+sudo chmod -R 750 "$WWW_DIR/$SITE_DIR"
 
 
 # LET'S ENCRYPT

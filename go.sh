@@ -8,15 +8,15 @@ DBPASS=$(openssl rand -base64 24|sha256sum|base64|head -c 32| tr '[:upper:]' '[:
 WWW_DIR="/var/www"
 SITE_DIR="angelica"
 
-sudo apt update -y
-sudo apt upgrade -y
+sudo DEBIAN_FRONTEND=noninteractive apt update -y
+sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
 
 sudo apt install -y curl wget zip unzip nginx rpl
 
 sudo apt install -y software-properties-common
 sudo add-apt-repository -y ppa:ondrej/php
 
-sudo apt update -y
+sudo DEBIAN_FRONTEND=noninteractive apt update -y
 
 sudo apt install -y php8.1 php8.1-fpm php8.1-common php8.1-mysql php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd php8.1-imagick php8.1-cli php8.1-dev php8.1-imap php8.1-mbstring php8.1-opcache php8.1-soap php8.1-zip php8.1-redis php8.1-intl
 sudo apt install -y php8.2 php8.2-fpm php8.2-common php8.2-mysql php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick php8.2-cli php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-soap php8.2-zip php8.2-redis php8.2-intl
@@ -80,7 +80,7 @@ EOF
 sudo service nginx restart
 
 # FIREWALL
-sudo apt-get -y install fail2ban
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install fail2ban
 JAIL=/etc/fail2ban/jail.local
 sudo cat > "$JAIL" <<EOF
 [DEFAULT]
@@ -98,7 +98,7 @@ sudo ufw allow https
 sudo ufw allow "Nginx FULL"
 
 # MYSQL
-sudo apt-get install -y mysql-server
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
 SECURE_MYSQL=$(expect -c "
 set timeout 10
 spawn mysql_secure_installation
@@ -160,8 +160,8 @@ sudo chmod -R 775 "$WWW_DIR/$SITE_DIR/bootstrap/cache"
 
 
 # LET'S ENCRYPT
-sudo apt-get install -y certbot
-sudo apt-get install -y python3-certbot-nginx
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y certbot
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-certbot-nginx
 
 #CRON CONFIG
 TASK=/etc/cron.d/$NEW_USER.crontab

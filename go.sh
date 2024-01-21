@@ -8,6 +8,14 @@ DBPASS=$(openssl rand -base64 24|sha256sum|base64|head -c 32| tr '[:upper:]' '[:
 WWW_DIR="/var/www"
 SITE_DIR="angelica"
 
+if [ "$(id -u)" = "0" ]; then
+    clear
+else
+    clear
+    echo "You have to run as root. (In AWS use 'sudo -s')"
+    exit 1
+fi
+
 sudo NEEDRESTART_MODE=l apt update -y
 sudo NEEDRESTART_MODE=l apt upgrade -y
 
